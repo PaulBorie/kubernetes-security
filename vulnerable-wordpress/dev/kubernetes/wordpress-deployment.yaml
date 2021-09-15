@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: wordpress
+  name: wordpress
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: wordpress
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: wordpress
+    spec:
+      serviceAccountName: wordpress
+      containers:
+      - env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        - name: WORDPRESS_DB_PASSWORD
+          value: password
+        - name: WORDPRESS_DB_USER
+          value: root
+        image: paulborielabs/wordpress:gare
+        name: wordpress
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - mountPath: /var/www/html
+          name: wp
+          
+      - args:
+        - /bin/sh
+        - -c
+        - 'sleep 30; install-wp'
+        env:
+        - name: WORDPRESS_DB_HOST
+          value: mysql
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        - name: WORDPRESS_DB_PASSWORD
+          value: password
+        - name: WORDPRESS_DB_USER
+          value: root
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+             fieldPath: status.podIP
+        image: paulborielabs/wp-cli:dev2
+        name: wp-cli
+        volumeMounts:
+        - mountPath: /var/www/html
+          name: wp
+        securityContext:
+          runAsUser: 33
+
+      volumes:
+      - name: wp
+        persistentVolumeClaim:
+          claimName: wp
+
